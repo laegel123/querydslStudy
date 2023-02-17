@@ -351,7 +351,7 @@ public class QuerydslBasicTest {
         // then
 
     }
-//ㅅ
+//t
     @Test
     public void complexCase() throws Exception {
         // given
