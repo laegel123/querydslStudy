@@ -1,6 +1,7 @@
 package study.querydsl;
 
 import com.querydsl.core.QueryResults;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +12,7 @@ import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
+import study.querydsl.entity.QTeam;
 import study.querydsl.entity.Team;
 
 import javax.persistence.EntityManager;
@@ -19,9 +21,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static study.querydsl.entity.QMember.member;
+import static study.querydsl.entity.QTeam.team;
 
 @SpringBootTest
 @Transactional
+@Commit
 public class QuerydslBasicTest {
 
     @Autowired
@@ -129,4 +133,102 @@ public class QuerydslBasicTest {
         // then
         
     }
+
+    @Test
+    public void join() throws Exception {
+        // given
+        queryFactory = new JPAQueryFactory(em);
+        List<Member> teamA = queryFactory
+                .selectFrom(member)
+                .join(member.team, team)
+                .where(team.name.eq("teamA"))
+                .fetch();
+
+        // when
+
+
+        // then
+
+    }
+
+    @Test
+    public void theta_join() throws Exception {
+        // given
+        queryFactory = new JPAQueryFactory(em);
+        em.persist(new Member("teamA"));
+        em.persist(new Member("teamB"));
+
+        List<Member> result = queryFactory
+                .select(member)
+                .from(member, team)
+                .where(member.username.eq(team.name))
+                .fetch();
+
+        // when
+
+
+        // then
+
+    }
+
+    @Test
+    public void join_on_filtering() throws Exception {
+        // given
+        queryFactory = new JPAQueryFactory(em);
+        List<Tuple> result = queryFactory
+                .select(member, team)
+                .from(member)
+                .join(member.team, team).on(team.name.eq("teamA"))
+                .fetch();
+
+        for (Tuple tuple : result) {
+            System.out.println("tuple = " + tuple);
+        }
+
+
+        // when
+
+        // then
+
+    }
+
+    @Test
+    public void join_on_no_relation() throws Exception {
+        // given
+        queryFactory = new JPAQueryFactory(em);
+        em.persist(new Member("teamA"));
+        em.persist(new Member("teamB"));
+
+        List<Tuple> result = queryFactory
+                .select(member, team)
+                .from(member)
+                .leftJoin(team).on(member.username.eq(team.name))
+                .fetch();
+
+        // when
+
+
+        // then
+
+    }
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
