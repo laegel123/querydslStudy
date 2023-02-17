@@ -2,6 +2,7 @@ package study.querydsl;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,9 +17,12 @@ import study.querydsl.entity.QTeam;
 import study.querydsl.entity.Team;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnit;
 
 import java.util.List;
 
+import static com.querydsl.jpa.JPAExpressions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static study.querydsl.entity.QMember.member;
 import static study.querydsl.entity.QTeam.team;
@@ -212,7 +216,120 @@ public class QuerydslBasicTest {
 
     }
 
+    @PersistenceUnit
+    EntityManagerFactory emf;
 
+    @Test
+    public void fetchJoinNo() throws Exception {
+        // given
+        queryFactory = new JPAQueryFactory(em);
+        em.flush();
+        em.clear();
+
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1"))
+                .fetchOne();
+
+
+        // when
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
+        assertFalse(loaded);
+
+
+        // then
+
+    }
+
+    @Test
+    public void fetchJoinUse() throws Exception {
+        // given
+        queryFactory = new JPAQueryFactory(em);
+        em.flush();
+        em.clear();
+
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .join(member.team, team).fetchJoin()
+                .where(member.username.eq("member1"))
+                .fetchOne();
+
+
+        // when
+        boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
+        assertTrue(loaded);
+
+
+        // then
+
+    }
+
+    @Test
+    public void subQuery() throws Exception {
+        // given
+        queryFactory = new JPAQueryFactory(em);
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .where(member.age.eq(
+                        select(memberSub.age.max())
+                                .from(memberSub)
+                ))
+                .fetch();
+
+        // when
+        assertEquals(result.get(0).getAge(), 40);
+
+        // then
+
+    }
+
+    @Test
+    public void subQueryGoe() throws Exception {
+        // given
+        queryFactory = new JPAQueryFactory(em);
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .where(member.age.goe(
+                        select(memberSub.age.avg())
+                                .from(memberSub)
+                ))
+                .fetch();
+
+        // when
+        assertEquals(result.size(), 2);
+
+        // then
+
+    }
+
+
+    @Test
+    public void selectSubQuery() throws Exception {
+        // given
+        queryFactory = new JPAQueryFactory(em);
+        QMember memberSub = new QMember("memberSub");
+
+        List<Tuple> result = queryFactory
+                .select(member.username,
+                        select(memberSub.age.avg())
+                                .from(memberSub)
+                )
+                .from(member)
+                .fetch();
+
+        for (Tuple tuple : result) {
+            System.out.println("tuple = " + tuple);
+        }
+
+        // when
+
+        // then
+
+    }
 
 
 
