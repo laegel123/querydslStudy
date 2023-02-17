@@ -8,6 +8,7 @@ import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.junit.jupiter.api.Assertions;
@@ -576,6 +577,43 @@ public class QuerydslBasicTest {
                 .update(member)
                 .set(member.age, member.age.add(1))
                 .execute();
+
+
+        // when
+
+        // then
+
+    }
+
+    @Test
+    public void sqlFunction() throws Exception {
+        // given
+        queryFactory = new JPAQueryFactory(em);
+        queryFactory
+                .select(Expressions.stringTemplate("function('replace', {0}, {1}, {2})", member.username, "member", "M"))
+                .from(member)
+                .fetch();
+
+        // when
+
+        // then
+
+    }
+
+    @Test
+    public void sqlFunction2() throws Exception {
+        // given
+        queryFactory = new JPAQueryFactory(em);
+        List<String> result = queryFactory
+                .select(member.username)
+                .from(member)
+                //.where(member.username.eq(Expressions.stringTemplate("function('lower', {0})", member.username)))
+                .where(member.username.eq(member.username.lower()))
+                .fetch();
+
+        for (String s : result) {
+            System.out.println("s = " + s);
+        }
 
 
         // when
