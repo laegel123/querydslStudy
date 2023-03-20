@@ -32,6 +32,7 @@ public class MemberJpaRepository {
         em.persist(member);
     }
 
+    // test
     public Optional<Member> findById(Long id) {
         Member findMember = em.find(Member.class, id);
         return Optional.ofNullable(findMember);
